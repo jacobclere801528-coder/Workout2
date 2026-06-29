@@ -326,35 +326,6 @@
             padding: 0.5rem 1rem;
         }
 
-        .erm-box {
-            background: linear-gradient(135deg, var(--success) 0%, #40c057 100%);
-            padding: 1rem;
-            border-radius: 8px;
-            margin: 1rem 0;
-            color: white;
-            text-align: center;
-        }
-
-        .erm-value {
-            font-size: 2rem;
-            font-weight: 700;
-            margin: 0.5rem 0;
-        }
-
-        .erm-percentages {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 0.5rem;
-            margin-top: 0.75rem;
-            font-size: 0.85rem;
-        }
-
-        .erm-percent {
-            background: rgba(255, 255, 255, 0.2);
-            padding: 0.5rem;
-            border-radius: 6px;
-        }
-
         .calendar-mini {
             margin-top: 1rem;
         }
@@ -428,6 +399,32 @@
         .pr-item p {
             color: #999;
             font-size: 0.9rem;
+        }
+
+        #exerciseSuggestions {
+            position: absolute;
+            background: #222;
+            border: 1px solid #333;
+            border-radius: 8px;
+            max-height: 200px;
+            overflow-y: auto;
+            width: 100%;
+            z-index: 100;
+            display: none;
+        }
+
+        .suggestion-item {
+            padding: 0.75rem 1rem;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .suggestion-item:hover {
+            background: #333;
+        }
+
+        .exercise-input-wrapper {
+            position: relative;
         }
     </style>
 </head>
@@ -520,6 +517,37 @@
     </div>
 
     <script>
+        // Comprehensive Exercise Library
+        const exerciseLibrary = [
+            // Chest
+            'Barbell bench press', 'Incline barbell press', 'Dumbbell bench press', 'Incline dumbbell press',
+            'Decline barbell press', 'Machine chest press', 'Chest fly machine', 'Cable fly',
+            'Push-ups', 'Decline push-ups', 'Machine fly',
+            // Back
+            'Barbell rows', 'Cable seated row', 'Lat pulldown', 'Machine row',
+            'Chest-supported row', 'T-bar row', 'Single-arm dumbbell row', 'Rack pulls',
+            'Deadlift', 'Conventional deadlift', 'Sumo deadlift', 'Seal rows',
+            // Shoulders
+            'Barbell overhead press', 'Dumbbell overhead press', 'Machine shoulder press',
+            'Lateral raises', 'Cable lateral raise', 'Reverse pec deck', 'Upright rows',
+            'Plate loaded machine press', 'Smith machine press',
+            // Arms - Biceps
+            'Barbell curl', 'EZ-bar curl', 'Dumbbell curl', 'Cable curl',
+            'Machine bicep curl', 'Preacher curl', 'Incline curl', 'Hammer curl',
+            'Concentration curl', 'Spider curl',
+            // Arms - Triceps
+            'Tricep pushdown', 'Rope tricep pushdown', 'V-bar tricep pushdown',
+            'Overhead tricep extension', 'Dumbbell overhead extension', 'Skull crushers',
+            'Machine tricep dip', 'Tricep dips', 'Bench dips', 'Close-grip bench press',
+            // Legs
+            'Barbell back squat', 'Front squat', 'Goblet squat', 'Leg press',
+            'Hack squat', 'Smith machine squat', 'Machine leg press', 'Bulgarian split squat',
+            'Lunges', 'Dumbbell lunges', 'Walking lunges', 'Leg extensions',
+            'Leg curls', 'Seated leg curl', 'Lying leg curl',
+            'Romanian deadlift', 'Stiff-leg deadlift', 'Good mornings',
+            'Calf raises', 'Machine calf raise', 'Seated calf raise'
+        ];
+
         // Workout data structure
         const workoutPlans = {
             upperA: {
@@ -528,7 +556,7 @@
                 exercises: [
                     { name: 'Barbell bench press', description: 'Smith machine is fine at PF — 3×5, heavy', targetReps: 5 },
                     { name: 'Cable seated row', description: 'Wide grip, squeeze shoulder blades at peak', targetReps: 8 },
-                    { name: 'DB overhead press', description: 'Seated or standing, full lock-out overhead', targetReps: 8 },
+                    { name: 'Dumbbell overhead press', description: 'Seated or standing, full lock-out overhead', targetReps: 8 },
                     { name: 'Lat pulldown', description: 'Wide grip to shoulders, control descent', targetReps: 10 }
                 ]
             },
@@ -539,7 +567,7 @@
                     { name: 'Barbell back squat', description: 'ATG if possible, full ROM — 3×5, heavy', targetReps: 5 },
                     { name: 'Romanian deadlift', description: 'Strict form, slight knee bend, feel hamstring stretch', targetReps: 6 },
                     { name: 'Leg press', description: 'Full ROM, no lock-out at top', targetReps: 8 },
-                    { name: 'Leg curl', description: 'Controlled, squeeze at top for 1 second', targetReps: 10 }
+                    { name: 'Leg curls', description: 'Controlled, squeeze at top for 1 second', targetReps: 10 }
                 ]
             },
             upperB: {
@@ -549,7 +577,7 @@
                     { name: 'Incline dumbbell press', description: '30° angle, controlled eccentric', targetReps: 8 },
                     { name: 'Chest fly machine', description: 'Full stretch at bottom, peak squeeze', targetReps: 10 },
                     { name: 'EZ-bar curl', description: 'Slow 3-second eccentric', targetReps: 10 },
-                    { name: 'Cable tricep pushdown', description: 'Rope attachment, full extension', targetReps: 10 }
+                    { name: 'Tricep pushdown', description: 'Rope attachment, full extension', targetReps: 10 }
                 ]
             },
             lowerB: {
@@ -558,7 +586,7 @@
                 exercises: [
                     { name: 'Leg press', description: 'High foot placement for glute/quad balance', targetReps: 8 },
                     { name: 'Hack squat', description: 'Full ROM, controlled negatives', targetReps: 10 },
-                    { name: 'Leg extension', description: 'Peak contraction, squeeze 1 second', targetReps: 12 },
+                    { name: 'Leg extensions', description: 'Peak contraction, squeeze 1 second', targetReps: 12 },
                     { name: 'Seated leg curl', description: 'Hamstring focus, full contraction', targetReps: 12 }
                 ]
             }
