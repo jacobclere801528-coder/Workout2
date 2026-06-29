@@ -1,0 +1,1394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Workout Tracker - Track your workouts, sets, reps, and weight with automatic rest timers and 1RM estimation.">
+    <meta name="theme-color" content="#1a1a1a">
+    <title>Workout Tracker v2</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/png" href="icon-192.png">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #ff6b6b;
+            --primary-dark: #ff5252;
+            --secondary: #4ecdc4;
+            --success: #51cf66;
+            --warning: #ffd93d;
+            --danger: #ff6b6b;
+            --dark: #1a1a1a;
+            --darker: #0d0d0d;
+            --light: #f8f9fa;
+            --gray: #6c757d;
+            --border: #e0e0e0;
+            --text: #333;
+            --text-light: #666;
+            --transition: 0.3s ease;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 1rem;
+            color: var(--text);
+        }
+
+        body.dark-mode {
+            background: linear-gradient(135deg, #0d0d0d 0%, #1a1a1a 100%);
+            color: #f0f0f0;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            color: white;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        header h1 {
+            font-size: 2rem;
+            font-weight: 700;
+        }
+
+        .header-buttons {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: var(--secondary);
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #45b9ae;
+            transform: translateY(-2px);
+        }
+
+        .btn-small {
+            padding: 0.5rem 1rem;
+            font-size: 0.85rem;
+        }
+
+        .btn-ghost {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 2px solid white;
+        }
+
+        .btn-ghost:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .content {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        @media (max-width: 768px) {
+            .content {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            transition: all var(--transition);
+        }
+
+        body.dark-mode .card {
+            background: #2a2a2a;
+            color: #f0f0f0;
+            border: 1px solid #444;
+        }
+
+        .card:hover {
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        .card h2 {
+            margin-bottom: 1.5rem;
+            color: var(--primary);
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        body.dark-mode .card h2 {
+            color: var(--secondary);
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        body.dark-mode .form-group label {
+            color: #f0f0f0;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid var(--border);
+            border-radius: 6px;
+            font-size: 1rem;
+            transition: border-color var(--transition);
+        }
+
+        body.dark-mode .form-group input,
+        body.dark-mode .form-group select {
+            background: #1a1a1a;
+            border-color: #444;
+            color: #f0f0f0;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .input-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        @media (max-width: 480px) {
+            .input-row {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-box {
+            background: linear-gradient(135deg, var(--secondary) 0%, #45b9ae 100%);
+            color: white;
+            padding: 1.5rem;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+        }
+
+        .stat-box.primary {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+        }
+
+        .stat-box.success {
+            background: linear-gradient(135deg, var(--success) 0%, #40c057 100%);
+        }
+
+        .stat-box.warning {
+            background: linear-gradient(135deg, var(--warning) 0%, #ffc400 100%);
+        }
+
+        .stat-box h3 {
+            font-size: 0.9rem;
+            opacity: 0.9;
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .stat-box .value {
+            font-size: 2rem;
+            font-weight: 700;
+        }
+
+        .stat-box .subtext {
+            font-size: 0.8rem;
+            opacity: 0.8;
+            margin-top: 0.5rem;
+        }
+
+        .set-entry {
+            background: linear-gradient(to right, #f8f9fa, #fff);
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            border-left: 4px solid var(--primary);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        body.dark-mode .set-entry {
+            background: linear-gradient(to right, #1a1a1a, #252525);
+            border-left-color: var(--secondary);
+        }
+
+        .set-info {
+            flex: 1;
+            min-width: 150px;
+        }
+
+        .set-info p {
+            margin: 0.25rem 0;
+            font-size: 0.95rem;
+        }
+
+        .set-info strong {
+            color: var(--primary);
+        }
+
+        body.dark-mode .set-info strong {
+            color: var(--secondary);
+        }
+
+        .set-actions {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .btn-delete {
+            background: var(--danger);
+            color: white;
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: background var(--transition);
+        }
+
+        .btn-delete:hover {
+            background: #ff5252;
+        }
+
+        .timer-section {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            padding: 2rem;
+            border-radius: 12px;
+            text-align: center;
+            margin-bottom: 2rem;
+            box-shadow: 0 6px 20px rgba(255, 107, 107, 0.3);
+        }
+
+        body.dark-mode .timer-section {
+            box-shadow: 0 6px 20px rgba(78, 205, 196, 0.3);
+            background: linear-gradient(135deg, #1a1a1a 0%, #252525 100%);
+            border: 2px solid var(--secondary);
+        }
+
+        .timer-display {
+            font-size: 4rem;
+            font-weight: 700;
+            margin: 1rem 0;
+            font-variant-numeric: tabular-nums;
+            font-family: 'Courier New', monospace;
+        }
+
+        .timer-controls {
+            display: flex;
+            gap: 0.5rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 1.5rem;
+        }
+
+        .timer-controls .btn {
+            flex: 1;
+            min-width: 100px;
+        }
+
+        .timer-label {
+            font-size: 0.9rem;
+            opacity: 0.9;
+            margin-bottom: 0.5rem;
+        }
+
+        .erm-section {
+            background: linear-gradient(135deg, var(--success) 0%, #40c057 100%);
+            color: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+        }
+
+        body.dark-mode .erm-section {
+            background: linear-gradient(135deg, #1a1a1a 0%, #252525 100%);
+            border: 2px solid var(--success);
+            color: #51cf66;
+        }
+
+        .erm-title {
+            font-size: 0.95rem;
+            opacity: 0.9;
+            margin-bottom: 0.75rem;
+        }
+
+        .erm-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+
+        .erm-percentages {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+            gap: 0.5rem;
+        }
+
+        .erm-percent {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 0.75rem;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            text-align: center;
+        }
+
+        .calendar {
+            margin-top: 1.5rem;
+        }
+
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .calendar-header h3 {
+            font-size: 1.2rem;
+            color: var(--primary);
+        }
+
+        body.dark-mode .calendar-header h3 {
+            color: var(--secondary);
+        }
+
+        .calendar-nav {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .calendar-nav button {
+            padding: 0.4rem 0.8rem;
+            background: var(--border);
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: background var(--transition);
+        }
+
+        body.dark-mode .calendar-nav button {
+            background: #444;
+            color: #f0f0f0;
+        }
+
+        .calendar-nav button:hover {
+            background: var(--primary);
+            color: white;
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 0.5rem;
+        }
+
+        .calendar-day-header {
+            text-align: center;
+            font-weight: 600;
+            padding: 0.5rem;
+            background: var(--border);
+            border-radius: 4px;
+            font-size: 0.85rem;
+        }
+
+        body.dark-mode .calendar-day-header {
+            background: #444;
+            color: #f0f0f0;
+        }
+
+        .calendar-day {
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--light);
+            border-radius: 6px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all var(--transition);
+            border: 2px solid transparent;
+        }
+
+        body.dark-mode .calendar-day {
+            background: #333;
+            color: #f0f0f0;
+        }
+
+        .calendar-day:hover {
+            border-color: var(--primary);
+        }
+
+        .calendar-day.other-month {
+            opacity: 0.4;
+        }
+
+        .calendar-day.today {
+            background: var(--primary);
+            color: white;
+            font-weight: 700;
+        }
+
+        .calendar-day.completed {
+            background: var(--success);
+            color: white;
+            font-weight: 700;
+        }
+
+        .exercise-list {
+            margin-top: 1rem;
+        }
+
+        .exercise-item {
+            padding: 1rem;
+            background: var(--light);
+            border-radius: 8px;
+            margin-bottom: 0.75rem;
+            border-left: 4px solid var(--secondary);
+        }
+
+        body.dark-mode .exercise-item {
+            background: #1a1a1a;
+            border-left-color: var(--secondary);
+        }
+
+        .exercise-item h4 {
+            margin-bottom: 0.5rem;
+            color: var(--primary);
+        }
+
+        body.dark-mode .exercise-item h4 {
+            color: var(--secondary);
+        }
+
+        .exercise-item p {
+            margin: 0.25rem 0;
+            font-size: 0.9rem;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            max-width: 500px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            animation: slideUp 0.3s ease;
+        }
+
+        body.dark-mode .modal-content {
+            background: #2a2a2a;
+            color: #f0f0f0;
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(30px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            border-bottom: 2px solid var(--border);
+            padding-bottom: 1rem;
+        }
+
+        body.dark-mode .modal-header {
+            border-bottom-color: #444;
+        }
+
+        .modal-header h2 {
+            color: var(--primary);
+        }
+
+        body.dark-mode .modal-header h2 {
+            color: var(--secondary);
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--text);
+        }
+
+        body.dark-mode .modal-close {
+            color: #f0f0f0;
+        }
+
+        .no-data {
+            text-align: center;
+            padding: 2rem;
+            color: var(--text-light);
+        }
+
+        body.dark-mode .no-data {
+            color: #999;
+        }
+
+        .streak-badge {
+            display: inline-block;
+            background: var(--warning);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-weight: 600;
+            margin: 0.25rem;
+            font-size: 0.9rem;
+        }
+
+        .streak-badge.long {
+            background: var(--primary);
+        }
+
+        .pr-badge {
+            display: inline-block;
+            background: var(--danger);
+            color: white;
+            padding: 0.3rem 0.8rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.5rem;
+        }
+
+        .notification {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background: var(--success);
+            color: white;
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            animation: slideInRight 0.3s ease;
+            z-index: 999;
+        }
+
+        @keyframes slideInRight {
+            from { transform: translateX(400px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        .notification.error {
+            background: var(--danger);
+        }
+
+        .notification.warning {
+            background: var(--warning);
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        @media print {
+            .btn, .timer-controls, header .header-buttons {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div>
+                <h1>💪 Workout Tracker v2</h1>
+            </div>
+            <div class="header-buttons">
+                <button class="btn btn-ghost" onclick="toggleDarkMode()">🌙 Dark</button>
+                <button class="btn btn-secondary" onclick="openHistoryModal()">📊 History</button>
+                <button class="btn btn-secondary" onclick="exportData()">💾 Export</button>
+            </div>
+        </header>
+
+        <div class="content">
+            <div>
+                <!-- Stats -->
+                <div class="stats-grid">
+                    <div class="stat-box primary">
+                        <h3>Total Workouts</h3>
+                        <div class="value" id="totalWorkouts">0</div>
+                    </div>
+                    <div class="stat-box success">
+                        <h3>🔥 Current Streak</h3>
+                        <div class="value" id="currentStreak">0</div>
+                    </div>
+                    <div class="stat-box">
+                        <h3>🏆 Longest Streak</h3>
+                        <div class="value" id="longestStreak">0</div>
+                    </div>
+                    <div class="stat-box warning">
+                        <h3>Total Volume</h3>
+                        <div class="value" id="totalVolume">0</div>
+                        <div class="subtext">lbs</div>
+                    </div>
+                </div>
+
+                <!-- Main Card -->
+                <div class="card">
+                    <h2>➕ Log Exercise</h2>
+                    
+                    <form id="exerciseForm" onsubmit="logSet(event)">
+                        <div class="form-group">
+                            <label for="exercise">Exercise Name</label>
+                            <input type="text" id="exercise" placeholder="e.g., Bench Press" list="exercises" required>
+                            <datalist id="exercises"></datalist>
+                        </div>
+
+                        <div class="input-row">
+                            <div class="form-group">
+                                <label for="weight">Weight (lbs)</label>
+                                <input type="number" id="weight" placeholder="185" step="0.5" min="0" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="reps">Reps</label>
+                                <input type="number" id="reps" placeholder="5" min="1" max="100" required>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="sets">Sets Completed (optional)</label>
+                            <input type="number" id="sets" placeholder="1" value="1" min="1" max="50">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="restTimer">Rest Timer (seconds)</label>
+                            <select id="restTimer">
+                                <option value="30">30 sec</option>
+                                <option value="60" selected>60 sec</option>
+                                <option value="90">90 sec</option>
+                                <option value="120">2 min</option>
+                                <option value="180">3 min</option>
+                                <option value="0">No Timer</option>
+                            </select>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary" style="width: 100%;">Log Set & Start Timer</button>
+                    </form>
+                </div>
+
+                <!-- Rest Timer Section -->
+                <div id="timerSection" class="timer-section" style="display: none;">
+                    <div class="timer-label">Rest Timer</div>
+                    <div class="timer-display" id="timerDisplay">0:00</div>
+                    <div class="timer-controls">
+                        <button class="btn btn-secondary btn-small" onclick="pauseResumeTimer()">⏸ Pause</button>
+                        <button class="btn btn-secondary btn-small" onclick="skipTimer()">⏭ Skip</button>
+                        <button class="btn btn-secondary btn-small" onclick="closeTimer()">✕ Close</button>
+                    </div>
+                </div>
+
+                <!-- 1RM Estimator Section -->
+                <div id="ermSection" class="erm-section" style="display: none;">
+                    <div class="erm-title">💪 Estimated 1RM (Epley Formula)</div>
+                    <div class="erm-value" id="ermValue">0 lbs</div>
+                    <div class="erm-percentages" id="ermPercentages"></div>
+                </div>
+
+                <!-- Today's Exercises -->
+                <div class="card">
+                    <h2>📋 Today's Exercises</h2>
+                    <div id="todayExercises" class="exercise-list">
+                        <div class="no-data">No exercises logged yet. Start tracking!</div>
+                    </div>
+                </div>
+
+                <!-- Personal Records -->
+                <div class="card">
+                    <h2>🏆 Personal Records</h2>
+                    <div id="prList" class="exercise-list">
+                        <div class="no-data">No records yet. Keep lifting!</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sidebar -->
+            <div>
+                <!-- Consistency Calendar -->
+                <div class="card">
+                    <h2>📅 Consistency Calendar</h2>
+                    <div class="calendar">
+                        <div class="calendar-header">
+                            <h3 id="calendarMonth"></h3>
+                            <div class="calendar-nav">
+                                <button onclick="previousMonth()">←</button>
+                                <button onclick="todayMonth()">Today</button>
+                                <button onclick="nextMonth()">→</button>
+                            </div>
+                        </div>
+                        <div class="calendar-grid" id="calendarGrid"></div>
+                    </div>
+                    <div style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border);">
+                        <h3 style="margin-bottom: 0.5rem; color: var(--primary); font-size: 1.1rem;">Streaks</h3>
+                        <div id="streakBadges" style="display: flex; flex-wrap: wrap; gap: 0.5rem;"></div>
+                    </div>
+                </div>
+
+                <!-- Quick Stats -->
+                <div class="card">
+                    <h2>⚡ Quick Stats</h2>
+                    <div id="quickStats">
+                        <div class="no-data">Complete your first workout!</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- History Modal -->
+    <div id="historyModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>📊 Workout History</h2>
+                <button class="modal-close" onclick="closeHistoryModal()">✕</button>
+            </div>
+            <div id="historyContent">
+                <div class="no-data">Loading history...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class WorkoutTracker {
+            constructor() {
+                this.data = {
+                    workouts: [],
+                    streakDates: [],
+                    personalRecords: {}
+                };
+                this.loadData();
+            }
+
+            loadData() {
+                const stored = localStorage.getItem('workoutData');
+                if (stored) {
+                    this.data = JSON.parse(stored);
+                }
+            }
+
+            saveData() {
+                localStorage.setItem('workoutData', JSON.stringify(this.data));
+            }
+
+            addWorkout(exercise, weight, reps, sets = 1) {
+                const today = new Date().toDateString();
+                const workout = {
+                    date: today,
+                    exercise,
+                    weight,
+                    reps,
+                    sets,
+                    timestamp: Date.now()
+                };
+                this.data.workouts.push(workout);
+
+                if (!this.data.streakDates.includes(today)) {
+                    this.data.streakDates.push(today);
+                }
+
+                const key = `${exercise}_${weight}`;
+                if (!this.data.personalRecords[exercise] || weight > this.data.personalRecords[exercise].weight) {
+                    this.data.personalRecords[exercise] = { weight, reps, date: today };
+                }
+
+                this.saveData();
+            }
+
+            getStats() {
+                const totalWorkouts = this.data.workouts.length;
+                const totalVolume = this.data.workouts.reduce((sum, w) => sum + (w.weight * w.reps * w.sets), 0);
+                const currentStreak = this.calculateStreak();
+                const longestStreak = this.calculateLongestStreak();
+
+                return { totalWorkouts, totalVolume, currentStreak, longestStreak };
+            }
+
+            calculateStreak() {
+                if (this.data.streakDates.length === 0) return 0;
+
+                const sortedDates = this.data.streakDates
+                    .map(d => new Date(d))
+                    .sort((a, b) => b - a);
+
+                let streak = 1;
+                for (let i = 1; i < sortedDates.length; i++) {
+                    const diff = Math.floor((sortedDates[i - 1] - sortedDates[i]) / (1000 * 60 * 60 * 24));
+                    if (diff === 1) {
+                        streak++;
+                    } else {
+                        break;
+                    }
+                }
+                return streak;
+            }
+
+            calculateLongestStreak() {
+                if (this.data.streakDates.length === 0) return 0;
+
+                const sortedDates = this.data.streakDates
+                    .map(d => new Date(d))
+                    .sort((a, b) => a - b);
+
+                let maxStreak = 1;
+                let currentStreak = 1;
+
+                for (let i = 1; i < sortedDates.length; i++) {
+                    const diff = Math.floor((sortedDates[i] - sortedDates[i - 1]) / (1000 * 60 * 60 * 24));
+                    if (diff === 1) {
+                        currentStreak++;
+                        maxStreak = Math.max(maxStreak, currentStreak);
+                    } else {
+                        currentStreak = 1;
+                    }
+                }
+                return maxStreak;
+            }
+
+            getTodayWorkouts() {
+                const today = new Date().toDateString();
+                return this.data.workouts.filter(w => w.date === today);
+            }
+        }
+
+        class RestTimer {
+            constructor() {
+                this.timeRemaining = 0;
+                this.isRunning = false;
+                this.intervalId = null;
+                this.duration = 0;
+            }
+
+            start(duration) {
+                this.duration = duration;
+                this.timeRemaining = duration;
+                this.isRunning = true;
+                this.tick();
+                this.intervalId = setInterval(() => this.tick(), 100);
+            }
+
+            tick() {
+                if (this.isRunning) {
+                    this.timeRemaining -= 0.1;
+                    updateTimerDisplay();
+
+                    if (this.timeRemaining <= 0) {
+                        this.timeRemaining = 0;
+                        this.complete();
+                    }
+                }
+            }
+
+            pause() {
+                this.isRunning = false;
+            }
+
+            resume() {
+                this.isRunning = true;
+            }
+
+            skip() {
+                this.complete();
+            }
+
+            complete() {
+                this.isRunning = false;
+                clearInterval(this.intervalId);
+                this.timeRemaining = 0;
+                updateTimerDisplay();
+                showNotification('Rest time complete! Ready for next set?', 'success');
+                playTimerSound();
+                vibrateDevice();
+            }
+
+            getDisplayTime() {
+                const minutes = Math.floor(this.timeRemaining / 60);
+                const seconds = Math.floor(this.timeRemaining % 60);
+                return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+            }
+        }
+
+        const tracker = new WorkoutTracker();
+        const timer = new RestTimer();
+        let calendarDate = new Date();
+
+        function updateTimerDisplay() {
+            document.getElementById('timerDisplay').textContent = timer.getDisplayTime();
+        }
+
+        function updateStats() {
+            const stats = tracker.getStats();
+            document.getElementById('totalWorkouts').textContent = stats.totalWorkouts;
+            document.getElementById('currentStreak').textContent = stats.currentStreak;
+            document.getElementById('longestStreak').textContent = stats.longestStreak;
+            document.getElementById('totalVolume').textContent = stats.totalVolume.toLocaleString();
+        }
+
+        function updateTodayExercises() {
+            const todayWorkouts = tracker.getTodayWorkouts();
+            const container = document.getElementById('todayExercises');
+
+            if (todayWorkouts.length === 0) {
+                container.innerHTML = '<div class="no-data">No exercises logged yet. Start tracking!</div>';
+                return;
+            }
+
+            container.innerHTML = todayWorkouts.map((w, idx) => `
+                <div class="set-entry">
+                    <div class="set-info">
+                        <p><strong>${w.exercise}</strong></p>
+                        <p>${w.weight} lbs × ${w.reps} reps (${w.sets} set${w.sets > 1 ? 's' : ''})</p>
+                        <p style="font-size: 0.85rem; opacity: 0.7;">Total: ${(w.weight * w.reps * w.sets).toLocaleString()} lbs</p>
+                    </div>
+                    <div class="set-actions">
+                        <button class="btn-delete" onclick="deleteTodayWorkout(${idx})">Delete</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function updatePersonalRecords() {
+            const prs = tracker.data.personalRecords;
+            const container = document.getElementById('prList');
+
+            if (Object.keys(prs).length === 0) {
+                container.innerHTML = '<div class="no-data">No records yet. Keep lifting!</div>';
+                return;
+            }
+
+            container.innerHTML = Object.entries(prs).map(([exercise, record]) => `
+                <div class="exercise-item">
+                    <h4>${exercise} <span class="pr-badge">PR</span></h4>
+                    <p>${record.weight} lbs × ${record.reps} reps</p>
+                    <p style="font-size: 0.85rem; opacity: 0.7;">Set on ${record.date}</p>
+                </div>
+            `).join('');
+        }
+
+        function calculateERM(weight, reps) {
+            return weight * (1 + reps / 30);
+        }
+
+        function updateERM(weight, reps) {
+            if (weight > 0 && reps > 0) {
+                const erm = calculateERM(weight, reps);
+                const section = document.getElementById('ermSection');
+                section.style.display = 'block';
+                document.getElementById('ermValue').textContent = Math.round(erm) + ' lbs';
+
+                const percentages = [95, 90, 85, 80, 75];
+                const html = percentages.map(p => {
+                    const w = Math.round(erm * (p / 100));
+                    return `<div class="erm-percent">${p}%: ${w} lbs</div>`;
+                }).join('');
+                document.getElementById('ermPercentages').innerHTML = html;
+            }
+        }
+
+        function renderCalendar() {
+            const year = calendarDate.getFullYear();
+            const month = calendarDate.getMonth();
+
+            document.getElementById('calendarMonth').textContent = 
+                calendarDate.toLocaleString('default', { month: 'long', year: 'numeric' });
+
+            const firstDay = new Date(year, month, 1);
+            const startDate = new Date(firstDay);
+            startDate.setDate(startDate.getDate() - firstDay.getDay());
+
+            const grid = document.getElementById('calendarGrid');
+            grid.innerHTML = '';
+
+            const dayHeaders = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+            dayHeaders.forEach(day => {
+                const header = document.createElement('div');
+                header.className = 'calendar-day-header';
+                header.textContent = day;
+                grid.appendChild(header);
+            });
+
+            const today = new Date();
+            for (let i = 0; i < 42; i++) {
+                const date = new Date(startDate);
+                date.setDate(startDate.getDate() + i);
+
+                const dayDiv = document.createElement('div');
+                dayDiv.className = 'calendar-day';
+                dayDiv.textContent = date.getDate();
+
+                if (date.getMonth() !== month) {
+                    dayDiv.classList.add('other-month');
+                }
+
+                if (date.toDateString() === today.toDateString()) {
+                    dayDiv.classList.add('today');
+                }
+
+                if (tracker.data.streakDates.includes(date.toDateString())) {
+                    dayDiv.classList.add('completed');
+                }
+
+                grid.appendChild(dayDiv);
+            }
+
+            updateStreakBadges();
+        }
+
+        function updateStreakBadges() {
+            const stats = tracker.getStats();
+            const badgesHtml = `
+                <span class="streak-badge">Current: ${stats.currentStreak} days 🔥</span>
+                <span class="streak-badge long">Longest: ${stats.longestStreak} days 🏆</span>
+            `;
+            document.getElementById('streakBadges').innerHTML = badgesHtml;
+        }
+
+        function updateExerciseList() {
+            const exercises = [...new Set(tracker.data.workouts.map(w => w.exercise))];
+            const datalist = document.getElementById('exercises');
+            datalist.innerHTML = exercises.map(ex => `<option value="${ex}">`).join('');
+        }
+
+        function updateQuickStats() {
+            const todayWorkouts = tracker.getTodayWorkouts();
+
+            if (todayWorkouts.length === 0) {
+                document.getElementById('quickStats').innerHTML = '<div class="no-data">Complete your first workout!</div>';
+                return;
+            }
+
+            const totalSets = todayWorkouts.reduce((sum, w) => sum + w.sets, 0);
+            const totalReps = todayWorkouts.reduce((sum, w) => sum + (w.reps * w.sets), 0);
+            const todayVolume = todayWorkouts.reduce((sum, w) => sum + (w.weight * w.reps * w.sets), 0);
+
+            const html = `
+                <div class="exercise-item">
+                    <p><strong>${todayWorkouts.length}</strong> exercises logged</p>
+                </div>
+                <div class="exercise-item">
+                    <p><strong>${totalSets}</strong> total sets</p>
+                </div>
+                <div class="exercise-item">
+                    <p><strong>${totalReps}</strong> total reps</p>
+                </div>
+                <div class="exercise-item">
+                    <p><strong>${todayVolume.toLocaleString()}</strong> lbs lifted</p>
+                </div>
+            `;
+            document.getElementById('quickStats').innerHTML = html;
+        }
+
+        function logSet(event) {
+            event.preventDefault();
+
+            const exercise = document.getElementById('exercise').value;
+            const weight = parseFloat(document.getElementById('weight').value);
+            const reps = parseInt(document.getElementById('reps').value);
+            const sets = parseInt(document.getElementById('sets').value) || 1;
+            const restDuration = parseInt(document.getElementById('restTimer').value);
+
+            tracker.addWorkout(exercise, weight, reps, sets);
+
+            updateStats();
+            updateTodayExercises();
+            updatePersonalRecords();
+            updateERM(weight, reps);
+            updateExerciseList();
+            updateQuickStats();
+            renderCalendar();
+
+            if (restDuration > 0) {
+                document.getElementById('timerSection').style.display = 'block';
+                timer.start(restDuration);
+            }
+
+            document.getElementById('exerciseForm').reset();
+            document.getElementById('sets').value = '1';
+            document.getElementById('restTimer').value = '60';
+
+            showNotification(`✓ Set logged for ${exercise}!`, 'success');
+        }
+
+        function pauseResumeTimer() {
+            if (timer.isRunning) {
+                timer.pause();
+                event.target.textContent = '▶ Resume';
+            } else {
+                timer.resume();
+                event.target.textContent = '⏸ Pause';
+            }
+        }
+
+        function skipTimer() {
+            timer.skip();
+            document.getElementById('timerSection').style.display = 'none';
+        }
+
+        function closeTimer() {
+            timer.isRunning = false;
+            clearInterval(timer.intervalId);
+            document.getElementById('timerSection').style.display = 'none';
+            document.getElementById('ermSection').style.display = 'none';
+        }
+
+        function deleteTodayWorkout(index) {
+            const today = new Date().toDateString();
+            const todayWorkouts = tracker.getTodayWorkouts();
+            const workout = todayWorkouts[index];
+
+            const idx = tracker.data.workouts.findIndex(w => 
+                w.date === today && w.timestamp === workout.timestamp
+            );
+            if (idx !== -1) {
+                tracker.data.workouts.splice(idx, 1);
+                tracker.saveData();
+                updateTodayExercises();
+                updateStats();
+                updateQuickStats();
+                updatePersonalRecords();
+                showNotification('Set deleted', 'success');
+            }
+        }
+
+        function previousMonth() {
+            calendarDate.setMonth(calendarDate.getMonth() - 1);
+            renderCalendar();
+        }
+
+        function nextMonth() {
+            calendarDate.setMonth(calendarDate.getMonth() + 1);
+            renderCalendar();
+        }
+
+        function todayMonth() {
+            calendarDate = new Date();
+            renderCalendar();
+        }
+
+        function openHistoryModal() {
+            const modal = document.getElementById('historyModal');
+            const content = document.getElementById('historyContent');
+
+            if (tracker.data.workouts.length === 0) {
+                content.innerHTML = '<div class="no-data">No workout history yet.</div>';
+            } else {
+                const grouped = {};
+                tracker.data.workouts.forEach(w => {
+                    if (!grouped[w.date]) grouped[w.date] = [];
+                    grouped[w.date].push(w);
+                });
+
+                const html = Object.entries(grouped)
+                    .sort((a, b) => new Date(b[0]) - new Date(a[0]))
+                    .map(([date, workouts]) => `
+                        <div style="margin-bottom: 1.5rem; padding-bottom: 1.5rem; border-bottom: 1px solid var(--border);">
+                            <h3 style="margin-bottom: 0.75rem; color: var(--primary);">${date}</h3>
+                            ${workouts.map(w => `
+                                <div class="exercise-item">
+                                    <p><strong>${w.exercise}</strong></p>
+                                    <p>${w.weight} lbs × ${w.reps} reps (${w.sets} set${w.sets > 1 ? 's' : ''})</p>
+                                </div>
+                            `).join('')}
+                        </div>
+                    `).join('');
+                content.innerHTML = html;
+            }
+
+            modal.classList.add('active');
+        }
+
+        function closeHistoryModal() {
+            document.getElementById('historyModal').classList.remove('active');
+        }
+
+        function exportData() {
+            const dataStr = JSON.stringify(tracker.data, null, 2);
+            const blob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `workout-data-${new Date().toISOString().split('T')[0]}.json`;
+            a.click();
+            showNotification('Data exported successfully!', 'success');
+        }
+
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
+        }
+
+        function playTimerSound() {
+            try {
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioContext.createOscillator();
+                const gain = audioContext.createGain();
+
+                oscillator.connect(gain);
+                gain.connect(audioContext.destination);
+
+                oscillator.frequency.value = 800;
+                oscillator.type = 'sine';
+
+                gain.gain.setValueAtTime(0.3, audioContext.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+
+                oscillator.start(audioContext.currentTime);
+                oscillator.stop(audioContext.currentTime + 0.5);
+            } catch (e) {
+                console.log('Audio not available');
+            }
+        }
+
+        function vibrateDevice() {
+            if (navigator.vibrate) {
+                navigator.vibrate([200, 100, 200]);
+            }
+        }
+
+        function toggleDarkMode() {
+            document.body.classList.toggle('dark-mode');
+            localStorage.setItem('darkMode', document.body.classList.contains('dark-mode'));
+        }
+
+        function init() {
+            const darkMode = localStorage.getItem('darkMode') === 'true';
+            if (darkMode) {
+                document.body.classList.add('dark-mode');
+            }
+
+            updateStats();
+            updateTodayExercises();
+            updatePersonalRecords();
+            updateExerciseList();
+            updateQuickStats();
+            renderCalendar();
+
+            document.getElementById('historyModal').addEventListener('click', (e) => {
+                if (e.target.id === 'historyModal') closeHistoryModal();
+            });
+        }
+
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js').catch(() => {});
+        }
+
+        window.addEventListener('DOMContentLoaded', init);
+        window.addEventListener('beforeunload', () => {
+            tracker.saveData();
+        });
+    </script>
+</body>
+</html>
